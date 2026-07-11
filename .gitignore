@@ -10,3 +10,4 @@ barang.xlsx
 .github/
 tests/
 prompt.md
+.env
