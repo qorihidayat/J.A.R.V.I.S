@@ -1,0 +1,12 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+memoryBackup/
+/playwright/.cache/
+/playwright/.auth/
+barang.xlsx
+.github/
+tests/
+prompt.md
