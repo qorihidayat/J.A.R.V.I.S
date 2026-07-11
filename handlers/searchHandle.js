@@ -1,22 +1,26 @@
 const ora = require("ora");
-const { deepSearch } = require("../tools/tavily");
+const {search} = require("../tools/api/search");
+const {default: axios} = require("axios");
+const {contentRouter} = require("../router/contentRouter");
 
-async function handleSearch(prompt){
+async function handleSearch(prompt) {
 
     const spinner = ora("Searching...").start();
+    let query = prompt.split("@search")[1].trim();
+    let result = await contentRouter(query);
+    if (! result) {
+        query = prompt.replace("@search", "").trim();
 
-    const query = prompt.replace("@search","").trim();
+        if (! query) {
 
-    if(!query){
+            spinner.fail("Query tidak boleh kosong");
 
-        spinner.fail("Query tidak boleh kosong");
+            return null;
 
-        return null;
+        }
 
+        result = await search(query);
     }
-
-    const result = await deepSearch(query);
-
     spinner.succeed("Done");
 
     return result;

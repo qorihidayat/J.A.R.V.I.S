@@ -1,34 +1,31 @@
 const ora = require("ora");
-const { deepSearch } = require("../tools/tavily");
-const { parseIntent } = require("../agent/intentParser");
-const { router } = require("../router");
-const { default: axios } = require("axios");
+const {search} = require("../tools/api/search");
+const {parseIntent} = require("../agent/intentParser");
+const {router} = require("../router/router");
+const { contentRouter } = require("../router/contentRouter");
 async function handleTools(prompt) {
 
     const spinner = ora("Executing...").start();
-
+    let result = "";
     if (prompt.includes("@search")) {
-
-        const query = prompt.split("@search")[1].trim();
-        let result = "";
-        if (query.includes("music") || query.includes("lagu") || query.includes("musik") || query.includes("album") || query.includes("band")) {
-            const response = await axios.get("https://itunes.apple.com/search?term=" + query + "&entity=song&limit=10");
-            response.data.results.forEach((item) => {
-                result += item.trackName+" - "+item.artistName+"\n";
-            });
-        }else{
-            const response = await deepSearch(query);
-            result = `Judul: ${response[0].title} \nURL: ${response[0].url}\nContent: ${response[0].content} (Rapihkan informasi ini dan berikan kepada user)`;
+        let query = prompt.split("@search")[1].trim();
+        result = await contentRouter(query);
+        if (!result) {
+            const response = await search(query);
+            result = `Judul: ${
+                response[0].title
+            } \nURL: ${
+                response[0].url
+            }\nContent: ${
+                response[0].content
+            }`;
         }
-        prompt =
-                prompt.split("@search")[0].trim() +
-                result;
-        
+        prompt = prompt.split("@search")[0].trim() + result + `Rapihkan informasi ini dan berikan kepada user`;
     }
 
     const intent = await parseIntent(prompt);
 
-    const result = await router(intent);
+    result = await router(intent);
 
     spinner.succeed("Done");
 

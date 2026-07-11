@@ -1,14 +1,14 @@
-const { createFolder } = require("./tools/createFolder");
-const { createFile } = require("./tools/createFile");
-const { readFile } = require("./tools/readFile");
-const { deleteFile } = require("./tools/deleteFile");
-const { deleteFolder } = require("./tools/deleteFolder");
-const { editFile } = require("./tools/editFile");
-const { listFiles } = require("./tools/listFiles");
-const { runCommand } = require("./tools/bash");
-const { generateHTML } = require("./agent/frontendAgent");
-const { qaEngineer } = require("./agent/qaEngineer");
-const { textEditor } = require("./agent/text-editor");
+const { createFolder } = require("../tools/createFolder");
+const { createFile } = require("../tools/createFile");
+const { readFile } = require("../tools/readFile");
+const { deleteFile } = require("../tools/deleteFile");
+const { deleteFolder } = require("../tools/deleteFolder");
+const { editFile } = require("../tools/editFile");
+const { listFiles } = require("../tools/listFiles");
+const { runCommand } = require("../tools/bash");
+const { generateHTML } = require("../agent/frontendAgent");
+const { qaEngineer } = require("../agent/qaEngineer");
+const { textEditor } = require("../agent/text-editor");
 
 async function router(intent) {
 
