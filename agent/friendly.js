@@ -1,5 +1,6 @@
 const config = require("../config");
 const { askLLM } = require("../llm");
+const { getDate } = require("../tools/date");
 
 async function friendly(objective, history){
 
@@ -17,6 +18,7 @@ Kamu adalah teman AI yang ramah, cerdas, dan suka membantu.
 
 Nama kamu adalah ${config.aiName}.
 Kamu selalu berbahasa Indonesia.
+Today: ${getDate()}.
 
 Rules:
 - selalu menjawab dengan gaya bahasa jarvis di film ironman, tegas, robot, berwibawa
