@@ -10,20 +10,17 @@ async function handleTools(prompt) {
     if (prompt.includes("@search")) {
         let query = prompt.split("@search")[1].trim();
         result = await contentRouter(query);
-        if (!result) {
-            const response = await search(query);
-            result = `Judul: ${
-                response[0].title
-            } \nURL: ${
-                response[0].url
-            }\nContent: ${
-                response[0].content
-            }`;
-        }
-        prompt = prompt.split("@search")[0].trim() + result + `Rapihkan informasi ini dan berikan kepada user`;
+        prompt = result[0].title ? 
+        prompt.split("@search")[0].trim() + " | " + JSON.stringify(result[0].title) + " | " + JSON.stringify(result[0].url) + " | " + JSON.stringify(result[0].content) + `Rapihkan informasi ini dan berikan kepada user`:
+        prompt.split("@search")[0].trim() + result + `Rapihkan informasi ini dan berikan kepada user`;
     }
-
-    const intent = await parseIntent(prompt);
+    let intent;
+    try{
+        intent = await parseIntent(prompt);
+    }catch(error){
+        spinner.fail("Error");
+        return error;
+    }
 
     result = await router(intent);
 

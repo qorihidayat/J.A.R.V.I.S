@@ -13,6 +13,7 @@
   "dependencies": {
     "@tavily/core": "^0.7.6",
     "dotenv": "^17.4.2",
+    "download": "^8.0.0",
     "exceljs": "^4.4.0"
   }
 }

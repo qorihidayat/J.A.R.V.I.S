@@ -4,6 +4,7 @@ const { handleExcel } = require("./excelHandle");
 const { handleSearch } = require("./searchHandle");
 const { handleFriendly } = require("./friendlyHandle");
 const { workspace } = require("../agent/workspace");
+const { contentRouter } = require("../router/contentRouter");
 
 async function handlePrompt(prompt, history) {
 
@@ -19,8 +20,8 @@ async function handlePrompt(prompt, history) {
     if (prompt.startsWith("@excel"))
         return handleExcel(prompt);
 
-    if (prompt.startsWith("@search"))
-        return handleSearch(prompt);
+    if (prompt.startsWith("@search") || prompt.startsWith("@image") || prompt.startsWith("@music"))
+        return contentRouter(prompt);
 
     return handleFriendly(prompt, history);
 }

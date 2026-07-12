@@ -22,6 +22,8 @@ Available actions:
 
 - music
 - image
+- search
+- berita
 
 Rules:
 
@@ -51,6 +53,14 @@ Output:
     "action": "image",
     "title": "orang memancing",
     "qty": 3
+}
+
+User:
+cari berita hari ini
+Output:
+{
+    "action": "search",
+    "title": "berita hari ini",
 }
 `
             },
