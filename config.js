@@ -9,6 +9,7 @@ module.exports = {
     // model: "qwen/qwen2.5-coder-14b"
 
     aiName: "J.A.R.V.I.S",
+    lang: "english",
     author: "@qorihiday",
     filePathExcel:"/barang.xlsx"
 };

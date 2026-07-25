@@ -4,7 +4,9 @@ function getDate() {
         weekday: "long",
         day: "numeric",
         month: "long",
-        year: "numeric"
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
     })
 }
 module.exports = {
