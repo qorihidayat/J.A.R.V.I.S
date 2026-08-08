@@ -1,127 +1,181 @@
 const { spawn } = require("child_process");
 const path = require("path");
+const configAll = require("../config");
 
 const config = {
     model: path.join(__dirname, "..", "whisper", "models", "ggml-small.bin"),
-    language: "id",
-    captureName: "REXUS", // Nama perangkat mic (atau kata kunci nama mic, case-insensitive). Contoh: "REXUS", "Voicemeeter", dll.
-    capture: 11,          // Fallback ID jika captureName tidak ditemukan/tidak diatur
-    vad: 0.65,
+    language: configAll.lang === "indonesia" ? "id" : "en",
+    captureName: "REXUS",
+    capture: 11,
+    vad: 0.85,
     step: 0,
-    length: 10000
+    length: 10000,
 };
+
+const WHISPER_EXE = path.join(
+    __dirname,
+    "..",
+    "whisper",
+    "whisper-stream.exe"
+);
+
+const IGNORED_PHRASES = new Set([
+    "terima kasih",
+    "terima kasih banyak",
+    "thank you",
+    "thank you very much",
+    "yandex",
+    "amara.org",
+    "you",
+    "[suara perbincangan]",
+]);
+
+function normalize(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function isHallucination(text) {
+    const clean = normalize(text);
+    if (!clean)
+        return true;
+    if (IGNORED_PHRASES.has(clean))
+        return true;
+    if (clean.includes("subtitles by"))
+        return true;
+    if (/^\[.*\]$/.test(text.trim()))
+        return true;
+    if (/^\(.*\)$/.test(text.trim()))
+        return true;
+    return false;
+}
 
 function getAudioDevices() {
     return new Promise((resolve) => {
-        const whisper = spawn(
-            path.join(__dirname, "..", "whisper", "whisper-stream.exe"),
-            ["-c", "999"]
-        );
+
+        const child = spawn(WHISPER_EXE, ["-c", "999"]);
+
         let output = "";
-        
-        whisper.stdout.on("data", (data) => { output += data.toString(); });
-        whisper.stderr.on("data", (data) => { output += data.toString(); });
-        
-        whisper.on("error", (err) => {
-            console.error("[Whisper Error] Gagal menjalankan whisper-stream untuk deteksi perangkat:", err.message);
-            resolve([]);
+
+        child.stdout.on("data", d => output += d.toString());
+        child.stderr.on("data", d => output += d.toString());
+
+        child.on("close", () => {
+
+            const devices = [];
+
+            output.split(/\r?\n/).forEach(line => {
+
+                const m = line.match(/Capture device #(\d+):\s*'(.*)'/);
+
+                if (!m) return;
+
+                devices.push({
+                    id: Number(m[1]),
+                    name: m[2]
+                });
+
+            });
+
+            resolve(devices);
+
         });
 
-        whisper.on("close", () => {
-            const devices = [];
-            const lines = output.split(/\r?\n/);
-            lines.forEach((line) => {
-                const match = line.match(/Capture device #(\d+):\s*'(.*)'/);
-                if (match) {
-                    devices.push({
-                        id: parseInt(match[1], 10),
-                        name: match[2]
-                    });
-                }
-            });
-            resolve(devices);
-        });
+        child.on("error", () => resolve([]));
+
     });
 }
 
 async function startWhisper(onText) {
-    const processWrapper = {
-        child: null,
-        kill: function(signal) {
-            if (this.child) {
-                this.child.kill(signal);
-            }
-        }
-    };
 
     const devices = await getAudioDevices();
+
     let captureId = config.capture;
-    
+
     if (config.captureName) {
-        const found = devices.find(d => 
+
+        const found = devices.find(d =>
             d.name.toLowerCase().includes(config.captureName.toLowerCase())
         );
+
         if (found) {
             captureId = found.id;
-            console.log(`[Whisper] Menggunakan perangkat: '${found.name}' (Indeks #${found.id})`);
+            // console.log(`[Whisper] Device: ${found.name}`);
         } else {
-            console.warn(`[Whisper Warning] Perangkat dengan nama "${config.captureName}" tidak ditemukan. Menggunakan fallback indeks #${captureId}`);
+            // console.log(`[Whisper] Device fallback: #${captureId}`);
         }
-    } else {
-        console.log(`[Whisper] Menggunakan default indeks #${captureId}`);
     }
 
-    const whisper = spawn(
-        path.join(__dirname, "..", "whisper", "whisper-stream.exe"),
-        [
-            "-m", config.model,
-            "-l", config.language,
-            "-c", captureId.toString(),
-            "-vth", config.vad.toString(),
-            "--step", config.step.toString(),
-            "--length", config.length.toString()
-        ]
-    );
+    const child = spawn(WHISPER_EXE, [
+        "-m", config.model,
+        "-l", config.language,
+        "-c", captureId.toString(),
+        "-vth", config.vad.toString(),
+        "--step", config.step.toString(),
+        "--length", config.length.toString()
+    ]);
 
-    processWrapper.child = whisper;
+    let lastText = "";
+    let lastTime = 0;
 
-    // Menyimpan teks yang sudah pernah dikirim agar tidak duplikat
-    const processedTexts = new Set();
+    child.stdout.on("data", buffer => {
 
-    whisper.stdout.on("data", (data) => {
-        const rawOutput = data.toString();
+        const lines = buffer.toString().split(/\r?\n/);
 
-        // Pecah output per baris
-        const lines = rawOutput.split(/\r?\n/);
+        for (const line of lines) {
 
-        lines.forEach((line) => {
-            // Regex diperbarui untuk mencocokkan '-->' dan menghapus tag timestamp
-            const match = line.match(/\[\d{2}:\d{2}:\d{2}\.\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}\.\d{3}\]\s*(.*)/);
+            const match = line.match(
+                /\[\d{2}:\d{2}:\d{2}\.\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}\.\d{3}\]\s*(.*)/
+            );
 
-            if (match && match[1]) {
-                const spokenText = match[1].trim();
+            if (!match) continue;
 
-                // Pastikan teks tidak kosong dan belum pernah dikirim sebelumnya
-                if (spokenText.length > 0 && !processedTexts.has(spokenText)) {
-                    processedTexts.add(spokenText); // Tandai teks sudah diproses
+            const text = match[1].trim();
 
-                    if (typeof onText === "function") {
-                        onText(spokenText);
-                    }
+            if (!text) continue;
+            if (isHallucination(text)) continue;
+            if (/^\(.*\)$/.test(text)) continue;
+
+            const now = Date.now();
+
+            if (text === lastText && (now - lastTime) < 3000)
+                continue;
+
+            lastText = text;
+            lastTime = now;
+
+            onText(text);
+        }
+
+    });
+
+    child.stderr.on("data", () => {});
+
+    child.on("close", code => {
+        // console.log(`[Whisper] exited (${code})`);
+    });
+
+    return {
+
+        kill() {
+            return new Promise(resolve => {
+
+                child.once("close", () => resolve());
+
+                if (!child.killed) {
+                    child.kill();
+                } else {
+                    resolve();
                 }
-            }
-        });
-    });
 
-    whisper.stderr.on("data", (data) => {
-        // Disembunyikan agar log bersih, atau aktifkan jika ingin melihat log internal
-    });
+            });
+        }
 
-    whisper.on("close", (code) => {
-        console.log("Whisper exited:", code);
-    });
+    };
 
-    return processWrapper;
 }
 
 module.exports = {

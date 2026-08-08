@@ -16,6 +16,6 @@ prompt.md
 .env
 memory.json
 output.wav
-voice/models/kokoro-v1.0.int8.onnx
-voice/voices/voices-v1.0.bin
+voice/models/
+voice/voices/
 
