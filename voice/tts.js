@@ -1,5 +1,6 @@
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 
 let pyProcess = null;
 let currentResolve = null;
@@ -7,10 +8,15 @@ let currentReject = null;
 let isReady = false;
 const pendingQueue = [];
 
+function getPythonExecutable() {
+    const venvPython = path.join(__dirname, "..", ".venv", "Scripts", "python.exe");
+    return fs.existsSync(venvPython) ? venvPython : "python";
+}
+
 function initTTS() {
     if (pyProcess) return;
 
-    pyProcess = spawn("python", [
+    pyProcess = spawn(getPythonExecutable(), [
         path.join(__dirname, "speak.py")
     ]);
 

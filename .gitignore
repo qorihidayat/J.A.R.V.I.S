@@ -1,21 +1,37 @@
-# Playwright
+# Node.js
 node_modules/
-whisper/
 temp/
+*.log
 /test-results/
 /playwright-report/
 /blob-report/
-memoryBackup/
 /playwright/.cache/
 /playwright/.auth/
-barang.xlsx
-.github/
-tests/
-test.js
-prompt.md
-.env
-memory.json
-output.wav
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local runtime data and generated assets
+whisper/
 voice/models/
 voice/voices/
+graphify-out/
+memoryBackup/
+barang.xlsx
+memory.json
+output.wav
+images/
 
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

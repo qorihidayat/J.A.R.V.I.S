@@ -1,0 +1,4 @@
+# Python runtime for voice/speak.py (Kokoro ONNX CPU)
+kokoro-onnx
+soundfile
+onnxruntime

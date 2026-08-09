@@ -5,6 +5,7 @@ const { handleSearch } = require("./searchHandle");
 const { handleFriendly } = require("./friendlyHandle");
 const { workspace } = require("../agent/workspace");
 const { contentRouter } = require("../router/contentRouter");
+const { handleProject } = require("./projectHandle");
 
 async function handlePrompt(prompt, history) {
 
@@ -16,6 +17,9 @@ async function handlePrompt(prompt, history) {
 
     if (prompt.startsWith("@workspace"))
         return workspace(prompt);
+
+    if (prompt.startsWith("@project"))
+        return handleProject(prompt);
 
     if (prompt.startsWith("@excel"))
         return handleExcel(prompt);

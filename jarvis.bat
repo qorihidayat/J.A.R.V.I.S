@@ -1,2 +1,2 @@
 @echo off
-node "D:\Document\Codes\node js\agent-ai\Jarvis"
+node "%~dp0index.js"

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node index.js",
+    "doctor": "node scripts/doctor.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -12,9 +15,14 @@
   },
   "dependencies": {
     "@tavily/core": "^0.7.6",
+    "axios": "^1.18.1",
+    "boxen": "^5.1.2",
+    "chalk": "^4.1.2",
     "dotenv": "^17.4.2",
     "download": "^8.0.0",
     "exceljs": "^4.4.0",
-    "kokoro-js": "^1.2.1"
+    "gradient-string": "^2.0.2",
+    "kokoro-js": "^1.2.1",
+    "ora": "^5.4.1"
   }
 }
